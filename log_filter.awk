@@ -1,13 +1,12 @@
 # Node output filter for robot_manager.sh (stdin -> stdout).
 #
-# Keeps only error/warning lines, plus process start/exit lines, the dhi
-# "activated" line that robot_manager.sh waits for in its torque check, and
-# the realsense refiner "[depth stream]" status lines (incl. OK / recovered).
+# Keeps only error/warning lines, plus process start/exit lines, the kid_rl
+# "Dynamixel Hardware Start!" line that robot_manager.sh waits for in its torque
+# check, and the realsense refiner "[depth stream]" status lines (incl. OK / recovered).
 #
 # fold=1 : a line repeated back to back (ignoring numbers such as timestamps)
 #          is written once, followed by a "repeated N times" note.
-#          dhi runs with fold=0: its errors are already throttled to 1/sec and
-#          the motor-power check needs every fresh "Failed to read" line.
+#          (kid_rl logs "Dynamixel Read Fail" every 20 ms while the bus is down)
 
 function flush_repeat()
 {
@@ -22,7 +21,8 @@ function flush_repeat()
 BEGIN {
     keep = "ERROR|FATAL|WARN|Traceback|Exception|Error:|" \
            "process started|process has died|process has finished|" \
-           "Dynamixel hardware interface activated|" \
+           "Dynamixel Hardware Start!|Dynamixel Hardware Stop!|" \
+           "enable_policy received|\\]: Mode [A-Z_]+ -> |" \
            "\\[depth stream\\]"
 
     # shown in red (cat / tail -f / less -R): errors, crashes, exceptions
@@ -39,6 +39,10 @@ function out(line)
         print line
     fflush()
 }
+
+# rviz2 (manipulation.launch.py) cannot open a display under the hotkey service and
+# dies at start. It only shows the URDF; main_node keeps running, so drop its lines.
+/\[rviz2-[0-9]+\]/ { next }
 
 $0 ~ keep {
     if (fold)

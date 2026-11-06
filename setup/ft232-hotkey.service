@@ -5,7 +5,7 @@ After=multi-user.target
 [Service]
 Type=simple
 User=robit
-ExecStart=/usr/bin/python3 -u /home/robit/colcon_ws/scripts/ft232_hotkey.py
+ExecStart=/usr/bin/python3 -u /home/robit/colcon_ws/script/USB_Serial_Switch/ft232_hotkey.py
 Restart=always
 RestartSec=2
 
